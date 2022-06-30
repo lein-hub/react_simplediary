@@ -1,9 +1,10 @@
 import './App.css';
 import DiaryEditor from './DiaryEditor';
 import DiaryList from './DiaryList';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 // import Lifecycle from './Lifecycle';
 import { useEffect } from 'react';
+import OptimizeTest from './OptimizeTest';
 
 // https://jsonplaceholder.typicode.com/comments
 
@@ -14,7 +15,6 @@ function App() {
 
   const getData = async () => {
     const res = await fetch('https://jsonplaceholder.typicode.com/comments').then(res => res.json());
-    console.log(res);
 
     const initData = res.slice(0, 20).map(item => {
       return {
@@ -46,7 +46,6 @@ function App() {
   };
 
   const onRemove = (targetId) => {
-    console.log(`${targetId}가 삭제되었습니다.`);
     const newDiaryList = data.filter((e) => e.id !== targetId);
     setData(newDiaryList);
   }
@@ -54,10 +53,33 @@ function App() {
   const onEdit = (targetId, newContent) => {
     setData(data.map((e) => e.id === targetId ? {...e, content: newContent} : e))
   }
+
+  const getDiaryAnalysis = useMemo(() => {
+    let goodCount = 0;
+    let badCount = 0;
+    data.forEach((e) => {
+      if (e.emotion > 2) {
+        goodCount++;
+      } else {
+        badCount++;
+      }
+    });
+    const goodRatio = goodCount / data.length * 100;
+
+    return {goodCount, badCount, goodRatio};
+  }, [data.length]);
+
+  const {goodCount, badCount, goodRatio} = getDiaryAnalysis;
+
   return (
     <div className="App">
       {/* <Lifecycle></Lifecycle> */}
+      <OptimizeTest></OptimizeTest>
       <DiaryEditor onCreate={onCreate} />
+      <div>전체 일기: {data.length}</div>
+      <div>기분 좋은 일기 갯수: {goodCount}</div>
+      <div>기분 나쁜 일기 갯수: {badCount}</div>
+      <div>기분 좋은 일기 비율: {goodRatio}%</div>
       <DiaryList onRemove={onRemove} diaryList={data} onEdit={onEdit} />
     </div>
   );
